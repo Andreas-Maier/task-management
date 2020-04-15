@@ -26,6 +26,6 @@ jobs:
     # Runs a single command using the runners shell
     - name: Docker Build & Push
       run: |
-        cat ~/GH_TOKEN.txt | docker login docker.pkg.github.com -u Andreas-Maier --password-stdin
+        cat ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u Andreas-Maier --password-stdin
         docker build -t docker.pkg.github.com/andreas-maier/task-management/task-management-service:latest .
         docker push docker.pkg.github.com/andreas-maier/task-management/task-management-service:latest
