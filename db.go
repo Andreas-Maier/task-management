@@ -21,7 +21,6 @@ const (
 
 	// Timeout operations after N seconds
 	connectTimeout           = 5
-	queryTimeout             = 30
 	connectionStringTemplate = "mongodb://%s:%s@%s"
 )
 
