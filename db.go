@@ -16,15 +16,12 @@ import (
 )
 
 const (
-	// Path to the AWS CA file
-	// caFilePath = "rds-combined-ca-bundle.pem"
-
 	// Timeout operations after N seconds
 	connectTimeout           = 5
 	connectionStringTemplate = "mongodb://%s:%s@%s"
 )
 
-// GetConnection Retrieves a client to the DocumentDB
+// GetConnection Retrieves a client to the MongoDB
 func getConnection() (*mongo.Client, context.Context, context.CancelFunc) {
 	username := os.Getenv("MONGODB_USERNAME")
 	password := os.Getenv("MONGODB_PASSWORD")
@@ -34,23 +31,23 @@ func getConnection() (*mongo.Client, context.Context, context.CancelFunc) {
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI))
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		log.Printf("Failed to create client: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), connectTimeout*time.Second)
 
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatalf("Failed to connect to cluster: %v", err)
+		log.Printf("Failed to connect to cluster: %v", err)
 	}
 
 	// Force a connection to verify our connection string
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatalf("Failed to ping cluster: %v", err)
+		log.Printf("Failed to ping cluster: %v", err)
 	}
 
-	fmt.Println("Connected to DocumentDB!")
+	fmt.Println("Connected to MongoDB!")
 	return client, ctx, cancel
 }
 
@@ -70,7 +67,7 @@ func GetAllTasks() ([]*Task, error) {
 	defer cursor.Close(ctx)
 	err = cursor.All(ctx, &tasks)
 	if err != nil {
-		log.Fatalf("Failed marshalling %v", err)
+		log.Printf("Failed marshalling %v", err)
 		return nil, err
 	}
 	return tasks, nil
@@ -92,14 +89,14 @@ func GetTaskByID(id primitive.ObjectID) (*Task, error) {
 	err := result.Decode(&task)
 
 	if err != nil {
-		log.Fatalf("Failed marshalling %v", err)
+		log.Printf("Failed marshalling %v", err)
 		return nil, err
 	}
 	log.Printf("Tasks: %v", task)
 	return task, nil
 }
 
-//Create creating a task in a mongo or document db
+//Create creating a task in a mongo
 func Create(task *Task) (primitive.ObjectID, error) {
 	client, ctx, cancel := getConnection()
 	defer cancel()
@@ -108,14 +105,14 @@ func Create(task *Task) (primitive.ObjectID, error) {
 
 	result, err := client.Database("tasks").Collection("tasks").InsertOne(ctx, task)
 	if err != nil {
-		log.Fatalf("Could not create Task: %v", err)
+		log.Printf("Could not create Task: %v", err)
 		return primitive.NilObjectID, err
 	}
 	oid := result.InsertedID.(primitive.ObjectID)
 	return oid, nil
 }
 
-//Update updating an existing task in a mongo or document db
+//Update updating an existing task in a mongo
 func Update(task *Task) (*Task, error) {
 	var updatedTask *Task
 	client, ctx, cancel := getConnection()
@@ -135,7 +132,7 @@ func Update(task *Task) (*Task, error) {
 
 	err := client.Database("tasks").Collection("tasks").FindOneAndUpdate(ctx, bson.M{"_id": task.ID}, update, &opt).Decode(&updatedTask)
 	if err != nil {
-		log.Fatalf("Could not save Task: %v", err)
+		log.Printf("Could not save Task: %v", err)
 		return nil, err
 	}
 	return updatedTask, nil
