@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,54 +10,54 @@ import (
 func handleGetTasks(c *gin.Context) {
 	var loadedTasks, err = GetAllTasks()
 	if err != nil {
-		c.JSON(404, gin.H{"msg": err})
+		c.JSON(http.StatusNotFound, gin.H{"msg": err})
 		return
 	}
-	c.JSON(200, gin.H{"tasks": loadedTasks})
+	c.JSON(http.StatusOK, gin.H{"tasks": loadedTasks})
 }
 
 func handleGetTask(c *gin.Context) {
 	var task Task
 	if err := c.BindUri(&task); err != nil {
-		c.JSON(400, gin.H{"msg": err})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
 	}
 	var loadedTask, err = GetTaskByID(task.ID)
 	if err != nil {
-		c.JSON(404, gin.H{"msg": err})
+		c.JSON(http.StatusNotFound, gin.H{"msg": err})
 		return
 	}
-	c.JSON(200, gin.H{"ID": loadedTask.ID, "Body": loadedTask.Body})
+	c.JSON(http.StatusOK, gin.H{"ID": loadedTask.ID, "Body": loadedTask.Body})
 }
 
 func handleCreateTask(c *gin.Context) {
 	var task Task
 	if err := c.ShouldBindJSON(&task); err != nil {
 		log.Print(err)
-		c.JSON(400, gin.H{"msg": err})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
 	}
 	id, err := Create(&task)
 	if err != nil {
-		c.JSON(500, gin.H{"msg": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": err})
 		return
 	}
-	c.JSON(200, gin.H{"id": id})
+	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
 func handleUpdateTask(c *gin.Context) {
 	var task Task
 	if err := c.ShouldBindJSON(&task); err != nil {
 		log.Print(err)
-		c.JSON(400, gin.H{"msg": err})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err})
 		return
 	}
 	savedTask, err := Update(&task)
 	if err != nil {
-		c.JSON(500, gin.H{"msg": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": err})
 		return
 	}
-	c.JSON(200, gin.H{"task": savedTask})
+	c.JSON(http.StatusOK, gin.H{"task": savedTask})
 }
 
 func main() {

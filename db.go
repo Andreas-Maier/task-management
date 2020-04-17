@@ -32,7 +32,6 @@ func getConnection() (*mongo.Client, context.Context, context.CancelFunc) {
 
 	connectionURI := fmt.Sprintf(connectionStringTemplate, username, password, clusterEndpoint)
 
-	log.Print(connectionURI)
 	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
